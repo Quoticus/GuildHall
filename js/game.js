@@ -57,14 +57,14 @@ for(var i = 0; i < 6; i++){
 
 for(var adven in adventurers){
   //console.log(adventurers[adven])
-  drawAdventurerTable(adventurers[adven], adventurers);
+  drawAdventurerTable(adventurers[adven]);
 }
 
-function drawAdventurerTable(adventurer, adventurersList){
+function drawAdventurerTable(adventurer){
   //console.log(adventurer.name);
   var body = document.body;
   var table = document.createElement("table");
-  table.style.width = '200px';
+  table.style.width = '150px';
   table.style.border = '1px solid black';
   for(var rows = 0; rows < 5; rows++){
     var tr = table.insertRow();
@@ -72,6 +72,7 @@ function drawAdventurerTable(adventurer, adventurersList){
     switch(rows){
       case 0:
         td.innerHTML = adventurer.name;
+        td.style.background = 'lightgreen';
         break;
       case 1:
         td.innerHTML = adventurer.sex + " " + adventurer.race;
@@ -92,6 +93,28 @@ function drawAdventurerTable(adventurer, adventurersList){
     td.style.border = '1px solid black';
   }
   table.style.borderCollapse = "collapse";
-  body.appendChild(table);
-  body.appendChild(document.createElement("br"));
+
+  return table;
 }
+
+function fillAdventurersTable(adventurers){
+  //This should duplicate the array, but instead it seems to just move it.
+  //var adventurersList = adventurers.splice(0);
+  var adventurersList = [];
+  for(var adven in adventurers){
+    adventurersList.push(adventurers[adven]);
+  }
+  var adventurersTable = document.getElementById("adventurersTable");
+  var tableRows = adventurersTable.rows;
+  for(var y = 0; y < tableRows.length; y++){
+    var rowCells = adventurersTable.rows[y].cells;
+    for(var x = 0; x < rowCells.length; x++){
+      rowCells[x].appendChild(drawAdventurerTable(adventurersList.shift()));
+      rowCells[x].style.border = '2px solid black';
+      rowCells[x].style.padding = '5px';
+    }
+  }
+  adventurersTable.style.borderCollapse = "collapse";
+}
+
+fillAdventurersTable(adventurers);
