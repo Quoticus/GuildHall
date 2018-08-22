@@ -1,3 +1,9 @@
+/*
+Names have been captured from:
+ https://www.mithrilandmages.com/utilities/MedievalBrowse.php
+as of Aug 21st, 2018
+*/
+var maleNamesList = `
 Aalart
 Aalef
 Aalot
@@ -6286,3 +6292,4 @@ Zuri
 Zuriko
 Zuzen
 Zwentibold
+`;
