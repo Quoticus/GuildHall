@@ -10,7 +10,7 @@ function Job(name, list){
   }
 }
 var CLASSES = ["Paladin", "Wizard", "Thief", "Druid", "Priest"];
-var CLASSATTRIBUTES = {
+var CLASS_ATTRIBUTES = {
   Paladin: new Job("Paladin", {Stamina: 1}),
   Wizard: new Job("Wizard", {Intelligence: 1}),
   Thief: new Job("Thief", {Agility: 1}),
@@ -23,7 +23,7 @@ function Race(name, minAge, maxAge){
   this.maxAge = maxAge;
 }
 var RACES = ["Human", "Dwarf", "Elf"]
-var RACIALATTRIBUTES = {
+var RACIAL_ATTRIBUTES = {
   Human: new Race("Human", 16, 80),
   Dwarf: new Race("Dwarf", 40, 400),
   Elf: new Race("Elf", 100, 800)
@@ -34,7 +34,7 @@ function Adventurer(){
   this.sex = SEXES[Math.round(Math.random())];
   this.name = this.sex.match(SEXES[0])?maleNames[Math.floor(Math.random() * maleNames.length)]:femaleNames[Math.floor(Math.random() * femaleNames.length)];
   this.race = RACES[Math.floor(Math.random() * RACES.length)];
-  this.age = Math.floor(Math.random() * RACIALATTRIBUTES[this.race].maxAge)+RACIALATTRIBUTES[this.race].minAge;
+  this.age = Math.floor(Math.random() * RACIAL_ATTRIBUTES[this.race].maxAge)+RACIAL_ATTRIBUTES[this.race].minAge;
   this.class = CLASSES[Math.floor(Math.random() * CLASSES.length)];
   this.level = 1;
   this.experience = 0;
@@ -52,7 +52,7 @@ function Adventurer(){
     Luck: 3
   }
   this.checkForLevel = function(adven){
-    adven.experience += adven.level * 50;
+    adven.experience += adven.level * 25;
     if(adven.expForNextlevel() <= 0){
       adven.level++;
       adven.expForNextlevel();
@@ -70,7 +70,7 @@ function Adventurer(){
   this.levelUpStats = function(){
     this.stats.Health -= this.stamBonus;
     for(var stat in this.stats){
-        CLASSATTRIBUTES[this.class].bonusStats[stat]?this.stats[stat] += ((CLASSATTRIBUTES[this.class].bonusStats[stat])+Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement):this.stats[stat] += Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement;
+        CLASS_ATTRIBUTES[this.class].bonusStats[stat]?this.stats[stat] += ((CLASS_ATTRIBUTES[this.class].bonusStats[stat])+Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement):this.stats[stat] += Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement;
     }
     this.stamBonus = Math.floor(this.stats.Stamina*1.5);
     this.stats.Health += this.stamBonus;
@@ -156,3 +156,19 @@ function updateAdventurerTile(adventurer){
 }
 
 fillAdventurersTable(adventurers);
+
+document.getElementById("startLevelup").addEventListener("click", function(){
+  for(var adven in adventurers){
+    adventurers[adven].autoUpdate();
+  }
+  this.disabled = true;
+  document.getElementById("stopLevelup").disabled = false;
+});
+document.getElementById("stopLevelup").addEventListener("click", function(){
+  for(var timer in timers){
+    clearInterval(timers[timer]);
+  }
+  timers = [];
+  this.disabled = true;
+  document.getElementById("startLevelup").disabled = false;
+});
