@@ -1,3 +1,4 @@
+var timers = [];
 var maleNames = (maleNamesList.split("\n")).filter(entity => String(entity).trim());
 var femaleNames = (femaleNamesList.split("\n")).filter(entity => String(entity).trim());
 var adventurers = new Array();
@@ -10,11 +11,11 @@ function Job(name, list){
 }
 var CLASSES = ["Paladin", "Wizard", "Thief", "Druid", "Priest"];
 var CLASSATTRIBUTES = {
-  Paladin: new Job("Paladin", {Stamina: 4}),
-  Wizard: new Job("Wizard", {Intelligence: 4}),
-  Thief: new Job("Thief", {Agility: 4}),
-  Druid: new Job("Druid", {Strength: 4}),
-  Priest: new Job("Priest", {Intelligence: 4})
+  Paladin: new Job("Paladin", {Stamina: 1}),
+  Wizard: new Job("Wizard", {Intelligence: 1}),
+  Thief: new Job("Thief", {Agility: 1}),
+  Druid: new Job("Druid", {Strength: 1}),
+  Priest: new Job("Priest", {Intelligence: 1})
 };
 function Race(name, minAge, maxAge){
   this.name = name;
@@ -37,6 +38,10 @@ function Adventurer(){
   this.class = CLASSES[Math.floor(Math.random() * CLASSES.length)];
   this.level = 1;
   this.experience = 0;
+  this.experienceToLevelModifier = 10;
+  this.expForNextlevel = function(){
+    return ((this.level * this.experienceToLevelModifier) * (this.level * this.experienceToLevelModifier)) - this.experience;
+  }
   this.stats = {
     Health: 50,
     Strength: 5,
@@ -46,15 +51,31 @@ function Adventurer(){
     Charisma: 4,
     Luck: 3
   }
-  this.checkForLevel = function(){
-    console.log(this.stats.Health);
-    return this.stats.Health;
+  this.checkForLevel = function(adven){
+    adven.experience += adven.level * 50;
+    if(adven.expForNextlevel() <= 0){
+      adven.level++;
+      adven.expForNextlevel();
+      adven.levelUpStats();
+    }
+    updateAdventurerTile(adven);
+  }
+  this.autoUpdate = function(){
+    var adventurer = this;
+    timers.push(setInterval(this.checkForLevel, 500, adventurer));
   }
   this.baseStatIncrement = 1;
   this.maxStatIncrement = 3;
-  for(var stat in this.stats){
-      CLASSATTRIBUTES[this.class].bonusStats[stat]?this.stats[stat] += ((CLASSATTRIBUTES[this.class].bonusStats[stat])+Math.floor(Math.random() * this.maxStatIncrement)+(this.baseStatIncrement * 2)):this.stats[stat] += Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement;
+  this.stamBonus = 0;
+  this.levelUpStats = function(){
+    this.stats.Health -= this.stamBonus;
+    for(var stat in this.stats){
+        CLASSATTRIBUTES[this.class].bonusStats[stat]?this.stats[stat] += ((CLASSATTRIBUTES[this.class].bonusStats[stat])+Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement):this.stats[stat] += Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement;
+    }
+    this.stamBonus = Math.floor(this.stats.Stamina*1.5);
+    this.stats.Health += this.stamBonus;
   }
+  this.levelUpStats();
 }
 
 for(var i = 0; i < 6; i++){
@@ -62,17 +83,15 @@ for(var i = 0; i < 6; i++){
 }
 
 for(var adven in adventurers){
-  //console.log(adventurers[adven])
   drawAdventurerTable(adventurers[adven]);
 }
 
 function drawAdventurerTable(adventurer){
-  //console.log(adventurer.name);
   var body = document.body;
   var table = document.createElement("table");
   table.setAttribute("id", adventurer.name);
   table.style.border = '1px solid black';
-  for(var rows = 0; rows < 5; rows++){
+  for(var rows = 0; rows < 6; rows++){
     var tr = table.insertRow();
     var td = tr.insertCell();
 
@@ -91,6 +110,9 @@ function drawAdventurerTable(adventurer){
         td.innerHTML = "Experience Points: " + adventurer.experience;
         break;
       case 4:
+        td.innerHTML = "Experience to Next Level: " + adventurer.expForNextlevel();
+        break;
+      case 5:
         var statsString = "";
         for(var stat in adventurer.stats){
           statsString += "<br/> "+stat+": "+adventurer.stats[stat];
@@ -108,8 +130,6 @@ function drawAdventurerTable(adventurer){
 }
 
 function fillAdventurersTable(adventurers){
-  //This should duplicate the array, but instead it seems to just move it.
-  //var adventurersList = adventurers.splice(0);
   var adventurersList = [];
   for(var adven in adventurers){
     adventurersList.push(adventurers[adven]);
@@ -125,6 +145,14 @@ function fillAdventurersTable(adventurers){
     }
   }
   adventurersTable.style.borderCollapse = "collapse";
+}
+
+function updateAdventurerTile(adventurer){
+  var adventurerTable = document.getElementById(adventurer.name);
+  var adventurerTableContainer = adventurerTable.parentElement;
+
+  adventurerTable.remove();
+  adventurerTableContainer.appendChild(drawAdventurerTable(adventurer));
 }
 
 fillAdventurersTable(adventurers);
