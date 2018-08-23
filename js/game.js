@@ -46,8 +46,14 @@ function Adventurer(){
     Charisma: 4,
     Luck: 3
   }
+  this.checkForLevel = function(){
+    console.log(this.stats.Health);
+    return this.stats.Health;
+  }
+  this.baseStatIncrement = 1;
+  this.maxStatIncrement = 3;
   for(var stat in this.stats){
-      CLASSATTRIBUTES[this.class].bonusStats[stat]?this.stats[stat] += ((CLASSATTRIBUTES[this.class].bonusStats[stat])+Math.floor(Math.random() * 3)+2):this.stats[stat] += Math.floor(Math.random() * 3)+1;
+      CLASSATTRIBUTES[this.class].bonusStats[stat]?this.stats[stat] += ((CLASSATTRIBUTES[this.class].bonusStats[stat])+Math.floor(Math.random() * this.maxStatIncrement)+(this.baseStatIncrement * 2)):this.stats[stat] += Math.floor(Math.random() * this.maxStatIncrement)+this.baseStatIncrement;
   }
 }
 
@@ -64,11 +70,12 @@ function drawAdventurerTable(adventurer){
   //console.log(adventurer.name);
   var body = document.body;
   var table = document.createElement("table");
-  table.style.width = '150px';
+  table.setAttribute("id", adventurer.name);
   table.style.border = '1px solid black';
   for(var rows = 0; rows < 5; rows++){
     var tr = table.insertRow();
     var td = tr.insertCell();
+
     switch(rows){
       case 0:
         td.innerHTML = adventurer.name;
@@ -91,6 +98,9 @@ function drawAdventurerTable(adventurer){
         td.innerHTML = "STATS"+statsString;
     }
     td.style.border = '1px solid black';
+    td.style.padding = '2px';
+    td.style.paddingLeft = '4px';
+    td.style.paddingRight = '4px';
   }
   table.style.borderCollapse = "collapse";
 
