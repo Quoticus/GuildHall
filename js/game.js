@@ -2,6 +2,12 @@ var timers = [];
 var maleNames = (maleNamesList.split("\n")).filter(entity => String(entity).trim());
 var femaleNames = (femaleNamesList.split("\n")).filter(entity => String(entity).trim());
 var adventurers = new Array();
+function Mission(){
+  this.name = "Default Mission Name";
+  this.rewards = {Experience: 342, Item1: "item1RefID", Item2: "item2RefID"};
+  this.adventurerSlots = 1;
+}
+var mission = new Mission();
 function Job(name, list){
   this.name = name;
   this.bonusStats = {};
@@ -22,7 +28,7 @@ function Race(name, minAge, maxAge){
   this.minAge = minAge;
   this.maxAge = maxAge;
 }
-var RACES = ["Human", "Dwarf", "Elf"]
+var RACES = ["Human", "Dwarf", "Elf"];
 var RACIAL_ATTRIBUTES = {
   Human: new Race("Human", 16, 80),
   Dwarf: new Race("Dwarf", 40, 400),
@@ -80,10 +86,6 @@ function Adventurer(){
 
 for(var i = 0; i < 6; i++){
   adventurers.push(new Adventurer());
-}
-
-for(var adven in adventurers){
-  drawAdventurerTable(adventurers[adven]);
 }
 
 function drawAdventurerTable(adventurer){
@@ -155,6 +157,26 @@ function updateAdventurerTile(adventurer){
   adventurerTableContainer.appendChild(drawAdventurerTable(adventurer));
 }
 
+function drawMissionTable(mission){
+  console.log(mission);
+  var table = document.createElement("TABLE");
+  table.insertRow().insertCell.innerHTML = "MISSION";
+  for(var info in mission){
+      var cell = table.insertRow().insertCell();
+      console.log(mission[info] + " Length: "+mission[info].length);
+      if(mission[info] instanceof Object){
+        for(var item in info){
+          console.log(item);
+          cell.innerHTML += item + "\n";
+        }
+      }else{
+        cell.innerHTML = mission[info];
+      }
+      cell.style.border = '1px solid black';
+  }
+  document.body.appendChild(table);
+}
+
 fillAdventurersTable(adventurers);
 
 document.getElementById("startLevelup").addEventListener("click", function(){
@@ -172,3 +194,12 @@ document.getElementById("stopLevelup").addEventListener("click", function(){
   this.disabled = true;
   document.getElementById("startLevelup").disabled = false;
 });
+
+function saveData(){
+  localStorage.setItem('adventurers', JSON.stringify(adventurers));
+}
+
+function retrieveData(){
+  var retrievedObject = localStorage.getItem('adventurers');
+  console.log("Retrieved Object", JSON.parse(retrievedObject));
+}
