@@ -3,9 +3,10 @@ var maleNames = (maleNamesList.split("\n")).filter(entity => String(entity).trim
 var femaleNames = (femaleNamesList.split("\n")).filter(entity => String(entity).trim());
 var adventurers = new Array();
 function Mission(){
-  this.name = "Default Mission Name";
-  this.rewards = {Experience: 342, Item1: "item1RefID", Item2: "item2RefID"};
-  this.adventurerSlots = 1;
+  this.title = "Default Mission Name";
+  this.adventurerSlots = 2; //Available Adventurer Slots
+  this.difficulty = Math.floor(Math.random() * 10) + 1; //Difficulty level from 1 to 10
+  this.rewards = {Experience: ((this.difficulty * 20)*this.adventurerSlots), Item1: "item1RefID", Item2: "item2RefID"};
 }
 var mission = new Mission();
 function Job(name, list){
@@ -36,26 +37,47 @@ var RACIAL_ATTRIBUTES = {
 };
 var SEXES = ["Male", "Female"];
 
-function Adventurer(){
-  this.sex = SEXES[Math.round(Math.random())];
-  this.name = this.sex.match(SEXES[0])?maleNames[Math.floor(Math.random() * maleNames.length)]:femaleNames[Math.floor(Math.random() * femaleNames.length)];
-  this.race = RACES[Math.floor(Math.random() * RACES.length)];
-  this.age = Math.floor(Math.random() * RACIAL_ATTRIBUTES[this.race].maxAge)+RACIAL_ATTRIBUTES[this.race].minAge;
-  this.class = CLASSES[Math.floor(Math.random() * CLASSES.length)];
-  this.level = 1;
-  this.experience = 0;
-  this.experienceToLevelModifier = 10;
+function Adventurer(retrievedAdventurer){
+  if(retrievedAdventurer != null){
+    this.sex = retrievedAdventurer.sex;
+    this.name = retrievedAdventurer.name;
+    this.race = retrievedAdventurer.race;
+    this.age = retrievedAdventurer.age;
+    this.class = retrievedAdventurer.class;
+    this.level = retrievedAdventurer.level;
+    this.experience = retrievedAdventurer.experience;
+    this.experienceToLevelModifier = retrievedAdventurer.experienceToLevelModifier;
+    this.stats = {
+      Health: retrievedAdventurer.stats.Health,
+      Strength: retrievedAdventurer.stats.Strength,
+      Agility: retrievedAdventurer.stats.Agility,
+      Stamina: retrievedAdventurer.stats.Stamina,
+      Intelligence: retrievedAdventurer.stats.Intelligence,
+      Charisma: retrievedAdventurer.stats.Charisma,
+      Luck: retrievedAdventurer.stats.Luck
+    }
+  }else{
+    this.sex = SEXES[Math.round(Math.random())];
+    this.name = this.sex.match(SEXES[0])?maleNames[Math.floor(Math.random() * maleNames.length)]:femaleNames[Math.floor(Math.random() * femaleNames.length)];
+    this.race = RACES[Math.floor(Math.random() * RACES.length)];
+    this.age = Math.floor(Math.random() * RACIAL_ATTRIBUTES[this.race].maxAge)+RACIAL_ATTRIBUTES[this.race].minAge;
+    this.class = CLASSES[Math.floor(Math.random() * CLASSES.length)];
+    this.level = 1;
+    this.experience = 0;
+    this.experienceToLevelModifier = 10;
+    this.stats = {
+      Health: 50,
+      Strength: 5,
+      Agility: 5,
+      Stamina: 5,
+      Intelligence: 5,
+      Charisma: 4,
+      Luck: 3
+    }
+  }
+
   this.expForNextlevel = function(){
     return ((this.level * this.experienceToLevelModifier) * (this.level * this.experienceToLevelModifier)) - this.experience;
-  }
-  this.stats = {
-    Health: 50,
-    Strength: 5,
-    Agility: 5,
-    Stamina: 5,
-    Intelligence: 5,
-    Charisma: 4,
-    Luck: 3
   }
   this.checkForLevel = function(adven){
     adven.experience += adven.level * 25;
@@ -81,12 +103,23 @@ function Adventurer(){
     this.stamBonus = Math.floor(this.stats.Stamina*1.5);
     this.stats.Health += this.stamBonus;
   }
-  this.levelUpStats();
+  if(retrievedAdventurer == null){
+      this.levelUpStats();
+  }
 }
 
-for(var i = 0; i < 6; i++){
-  adventurers.push(new Adventurer());
+function initializeAdventurers(){
+  var retrievedAdventurers = retrieveData();
+  for(var i = 0; i < 6; i++){
+    if(retrievedAdventurers != null){
+      adventurers.push(new Adventurer(retrievedAdventurers.shift()));
+    }else{
+      adventurers.push(new Adventurer());
+    }
+  }
 }
+
+initializeAdventurers();
 
 function drawAdventurerTable(adventurer){
   var body = document.body;
@@ -158,16 +191,15 @@ function updateAdventurerTile(adventurer){
 }
 
 function drawMissionTable(mission){
-  console.log(mission);
+  //console.log(mission);
   var table = document.createElement("TABLE");
   table.insertRow().insertCell.innerHTML = "MISSION";
   for(var info in mission){
       var cell = table.insertRow().insertCell();
-      console.log(mission[info] + " Length: "+mission[info].length);
       if(mission[info] instanceof Object){
-        for(var item in info){
-          console.log(item);
-          cell.innerHTML += item + "\n";
+        cell.innerHTML += "REWARDS" + "<br>";
+        for(var item in mission[info]){
+          cell.innerHTML += item + ": " + mission.rewards[item]+ "<br>";
         }
       }else{
         cell.innerHTML = mission[info];
@@ -193,13 +225,24 @@ document.getElementById("stopLevelup").addEventListener("click", function(){
   timers = [];
   this.disabled = true;
   document.getElementById("startLevelup").disabled = false;
+  saveData();
+});
+document.getElementById('deleteAdventurers').addEventListener("click", function(){
+  localStorage.removeItem('adventurers');
+  location.reload();
 });
 
 function saveData(){
+  console.log("Data has been saved");
   localStorage.setItem('adventurers', JSON.stringify(adventurers));
 }
 
 function retrieveData(){
-  var retrievedObject = localStorage.getItem('adventurers');
-  console.log("Retrieved Object", JSON.parse(retrievedObject));
+  var retrievedAdventurers = JSON.parse(localStorage.getItem('adventurers'));
+  if(retrievedAdventurers == null){
+    console.log("Data has not been retrieved");
+  }else{
+    console.log("Data has been retrieved");
+  }
+  return retrievedAdventurers;
 }
