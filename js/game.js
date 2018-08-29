@@ -6,7 +6,7 @@ function Mission(){
   this.title = "Default Mission Name";
   this.adventurerSlots = 2; //Available Adventurer Slots
   this.difficulty = Math.floor(Math.random() * 10) + 1; //Difficulty level from 1 to 10
-  this.rewards = {Experience: ((this.difficulty * 20)*this.adventurerSlots), Item1: "item1RefID", Item2: "item2RefID"};
+  this.rewards = {Experience: ((this.difficulty * 255)/this.adventurerSlots), Item1: "item1RefID", Item2: "item2RefID"};
 }
 var mission = new Mission();
 function Job(name, list){
@@ -119,8 +119,6 @@ function initializeAdventurers(){
   }
 }
 
-initializeAdventurers();
-
 function drawAdventurerTable(adventurer){
   var body = document.body;
   var table = document.createElement("table");
@@ -160,27 +158,83 @@ function drawAdventurerTable(adventurer){
     td.style.paddingRight = '4px';
   }
   table.style.borderCollapse = "collapse";
+  table.setAttribute("draggable", "true");
+  table.setAttribute("ondragstart", "drag(event)");
 
   return table;
 }
 
+/*
+  This function would benefit from creating the Elements dynamically.
+  Using a formuila of !(adventures.length % colAmount) would help to separate
+  the adventurers into columns numbering 3, 4, or 5. This'll be an implementation
+  for when I want to build a menu that displays all available adventurers for
+  recruitment or that are already owned.
+*/
 function fillAdventurersTable(adventurers){
   var adventurersList = [];
   for(var adven in adventurers){
     adventurersList.push(adventurers[adven]);
   }
-  var adventurersTable = document.getElementById("adventurersTable");
-  var tableRows = adventurersTable.rows;
-  for(var y = 0; y < tableRows.length; y++){
-    var rowCells = adventurersTable.rows[y].cells;
-    for(var x = 0; x < rowCells.length; x++){
-      rowCells[x].appendChild(drawAdventurerTable(adventurersList.shift()));
-      rowCells[x].style.border = '2px solid black';
-      rowCells[x].style.padding = '5px';
+  var adventurersTable = document.createElement("TABLE");
+  adventurersTable.setAttribute("id", "adventurersTable");
+  var colCount = 3;
+  for(var count = 0; count < adventurers.length/colCount; count++){
+    var currentRow = adventurersTable.insertRow();
+    for(var x = 0; x < colCount; x++){
+      var currentCell = currentRow.insertCell();
+      if(adventurersList.length){
+        currentCell.appendChild(drawAdventurerTable(adventurersList.shift()));
+      }
+      currentCell.style.border = '2px solid black';
+      currentCell.style.padding = '5px';
     }
   }
   adventurersTable.style.borderCollapse = "collapse";
+  document.body.appendChild(adventurersTable);
+  createDebugButtons();
 }
+
+function createButton(id, text){
+  var button = document.createElement("button");
+  button.setAttribute("type", "button");
+  button.setAttribute("id", id);
+  button.innerHTML = text;
+
+  return button;
+}
+
+function createDebugButtons(){
+  document.body.appendChild(createButton("startLevelUp", "Start Level-up Process"));
+  document.body.appendChild(createButton("stopLevelUp", "Stop Level-up Process"));
+  document.body.appendChild(createButton("deleteAdventurers", "Delete Adventurers"));
+
+  //This is a debug button.
+  document.getElementById("startLevelUp").addEventListener("click", function(){
+    for(var adven in adventurers){
+      adventurers[adven].autoUpdate();
+    }
+    this.disabled = true;
+    document.getElementById("stopLevelUp").disabled = false;
+  });
+  //This is a debug button.
+  document.getElementById("stopLevelUp").addEventListener("click", function(){
+    for(var timer in timers){
+      clearInterval(timers[timer]);
+    }
+    timers = [];
+    this.disabled = true;
+    document.getElementById("startLevelUp").disabled = false;
+    saveData();
+  });
+  //This is a debug button.
+  //This process will be much more streamlined and will occur without a reload.
+  document.getElementById('deleteAdventurers').addEventListener("click", function(){
+    localStorage.removeItem('adventurers');
+    location.reload();
+  });
+}
+
 
 function updateAdventurerTile(adventurer){
   var adventurerTable = document.getElementById(adventurer.name);
@@ -191,7 +245,6 @@ function updateAdventurerTile(adventurer){
 }
 
 function drawMissionTable(mission){
-  //console.log(mission);
   var table = document.createElement("TABLE");
   table.insertRow().insertCell.innerHTML = "MISSION";
   for(var info in mission){
@@ -202,35 +255,27 @@ function drawMissionTable(mission){
           cell.innerHTML += item + ": " + mission.rewards[item]+ "<br>";
         }
       }else{
-        cell.innerHTML = mission[info];
+        switch(info){
+          case 'difficulty':
+            cell.innerHTML += "Difficulty: ";
+            break;
+          case 'adventurerSlots':
+            cell.innerHTML += "Adventurer Slots: ";
+            break;
+          case 'title':
+            cell.style.background = 'orange';
+            break;
+          default:
+            cell.innerHTML += info+": ";
+        }
+        cell.innerHTML += mission[info];
       }
       cell.style.border = '1px solid black';
+      cell.style.padding = '2px';
   }
+  table.style.borderCollapse = "collapse";
   document.body.appendChild(table);
 }
-
-fillAdventurersTable(adventurers);
-
-document.getElementById("startLevelup").addEventListener("click", function(){
-  for(var adven in adventurers){
-    adventurers[adven].autoUpdate();
-  }
-  this.disabled = true;
-  document.getElementById("stopLevelup").disabled = false;
-});
-document.getElementById("stopLevelup").addEventListener("click", function(){
-  for(var timer in timers){
-    clearInterval(timers[timer]);
-  }
-  timers = [];
-  this.disabled = true;
-  document.getElementById("startLevelup").disabled = false;
-  saveData();
-});
-document.getElementById('deleteAdventurers').addEventListener("click", function(){
-  localStorage.removeItem('adventurers');
-  location.reload();
-});
 
 function saveData(){
   console.log("Data has been saved");
@@ -246,3 +291,21 @@ function retrieveData(){
   }
   return retrievedAdventurers;
 }
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    ev.target.appendChild(document.getElementById(data));
+}
+
+//Actual Execution Sequence Stage
+initializeAdventurers();
+fillAdventurersTable(adventurers);
