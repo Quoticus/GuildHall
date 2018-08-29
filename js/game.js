@@ -1,7 +1,10 @@
 var timers = [];
 var maleNames = (maleNamesList.split("\n")).filter(entity => String(entity).trim());
 var femaleNames = (femaleNamesList.split("\n")).filter(entity => String(entity).trim());
-var adventurers = new Array();
+var tempAdventurers = new Array();
+tempAdventurers.name = "tempAdventurers";
+var permanentAdventurers = new Array();
+permanentAdventurers.name = "permanentAdventurers";
 function Mission(){
   this.title = "Default Mission Name";
   this.adventurerSlots = 2; //Available Adventurer Slots
@@ -110,13 +113,23 @@ function Adventurer(retrievedAdventurer){
 
 function initializeAdventurers(){
   var retrievedAdventurers = retrieveData();
-  for(var i = 0; i < 6; i++){
-    if(retrievedAdventurers != null){
-      adventurers.push(new Adventurer(retrievedAdventurers.shift()));
-    }else{
-      adventurers.push(new Adventurer());
+  if(retrievedAdventurers != null){
+    var counter = retrievedAdventurers.length;
+    for(var i = 0; i < counter; i++){
+      permanentAdventurers.push(new Adventurer(retrievedAdventurers.shift()));
     }
+  }else{
+    console.log("No Existing Adventurer Data");
   }
+}
+
+function initializeTempAdventurers(amountToTemp){
+  var tempAdventurersName = tempAdventurers.name;
+  tempAdventurers = [];
+  for(var i = 0; i < amountToTemp; i++){
+    tempAdventurers.push(new Adventurer());
+  }
+  tempAdventurers.name = tempAdventurersName;
 }
 
 function drawAdventurerTable(adventurer){
@@ -172,27 +185,34 @@ function drawAdventurerTable(adventurer){
   recruitment or that are already owned.
 */
 function fillAdventurersTable(adventurers){
-  var adventurersList = [];
-  for(var adven in adventurers){
-    adventurersList.push(adventurers[adven]);
-  }
-  var adventurersTable = document.createElement("TABLE");
-  adventurersTable.setAttribute("id", "adventurersTable");
-  var colCount = 3;
-  for(var count = 0; count < adventurers.length/colCount; count++){
-    var currentRow = adventurersTable.insertRow();
-    for(var x = 0; x < colCount; x++){
-      var currentCell = currentRow.insertCell();
-      if(adventurersList.length){
-        currentCell.appendChild(drawAdventurerTable(adventurersList.shift()));
-      }
-      currentCell.style.border = '2px solid black';
-      currentCell.style.padding = '5px';
+  console.log(adventurers.name);
+  if(adventurers != null && adventurers.length){
+    var adventurersList = [];
+    for(var adven in adventurers){
+      adventurersList.push(adventurers[adven]);
     }
+    var adventurersTable = document.createElement("TABLE");
+    adventurersTable.setAttribute("id", adventurers.name);
+    var colCount = 3;
+    for(var count = 0; count < adventurers.length/colCount; count++){
+      var currentRow = adventurersTable.insertRow();
+      for(var x = 0; x < colCount; x++){
+        var currentCell = currentRow.insertCell();
+        if(adventurersList.length){
+          currentCell.appendChild(drawAdventurerTable(adventurersList.shift()));
+        }
+        currentCell.style.border = '2px solid black';
+        currentCell.style.padding = '5px';
+      }
+    }
+    adventurersTable.style.borderCollapse = "collapse";
+    document.body.appendChild(adventurersTable);
+    if(adventurers.name == permanentAdventurers.name){
+      createDebugButtons(adventurers.name);
+    }
+  }else{
+    console.log("Passed Adventurers List Empty");
   }
-  adventurersTable.style.borderCollapse = "collapse";
-  document.body.appendChild(adventurersTable);
-  createDebugButtons();
 }
 
 function createButton(id, text){
@@ -211,8 +231,9 @@ function createDebugButtons(){
 
   //This is a debug button.
   document.getElementById("startLevelUp").addEventListener("click", function(){
-    for(var adven in adventurers){
-      adventurers[adven].autoUpdate();
+    for(var adven in permanentAdventurers){
+      if(permanentAdventurers[adven] instanceof Adventurer)
+      permanentAdventurers[adven].autoUpdate();
     }
     this.disabled = true;
     document.getElementById("stopLevelUp").disabled = false;
@@ -279,7 +300,7 @@ function drawMissionTable(mission){
 
 function saveData(){
   console.log("Data has been saved");
-  localStorage.setItem('adventurers', JSON.stringify(adventurers));
+  localStorage.setItem('adventurers', JSON.stringify(permanentAdventurers));
 }
 
 function retrieveData(){
@@ -308,4 +329,6 @@ function drop(ev) {
 
 //Actual Execution Sequence Stage
 initializeAdventurers();
-fillAdventurersTable(adventurers);
+fillAdventurersTable(permanentAdventurers);
+initializeTempAdventurers(6);
+fillAdventurersTable(tempAdventurers);
