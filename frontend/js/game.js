@@ -19,12 +19,12 @@ function Job(name, list){
     this.bonusStats[x] = list[x];
   }
 }
-var CLASSES = ["Paladin", "Wizard", "Thief", "Druid", "Priest"];
+var CLASSES = ["Paladin", "Warrior", "Wizard", "Thief", "Priest"];
 var CLASS_ATTRIBUTES = {
   Paladin: new Job("Paladin", {Stamina: 1}),
+  Warrior: new Job("Warrior", {Strength: 1}),
   Wizard: new Job("Wizard", {Intelligence: 1}),
   Thief: new Job("Thief", {Agility: 1}),
-  Druid: new Job("Druid", {Strength: 1}),
   Priest: new Job("Priest", {Intelligence: 1})
 };
 function Race(name, minAge, maxAge){

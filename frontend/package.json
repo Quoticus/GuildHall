@@ -1,0 +1,11 @@
+{
+  "name": "Guildhall",
+  "version": "0.1.0",
+  "description": "Node.js implementation of Guildhall in Docker",
+  "author": "Quoticus",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
