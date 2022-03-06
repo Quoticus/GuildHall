@@ -11,10 +11,12 @@ services:
       - 5000:80
 
   frontend:
-    #image: php:apache
-    build: ./frontend
-    volumes:
-       - ./frontend:/var/www/html
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    #volumes:
+       #- ./frontend:/usr/src/app
+       #- ./frontend:/var/www/html
     ports:
        - 80:80
     depends_on:

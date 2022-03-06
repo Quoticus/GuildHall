@@ -18,9 +18,9 @@ let randomInterval = require("./randomInterval");
 class Adventurer {
   const experienceMod = 1500;
 
-  constructor(sex, name, race, age, job, level, experience, stats) {
-    this.sex = sex;
+  constructor(name, sex, race, age, job, level, experience, stats) {
     this.name = name;
+    this.sex = sex;
     this.race = race;
     this.age = age;
     this.job = job;
